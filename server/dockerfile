@@ -1,0 +1,26 @@
+# Step 1: Build
+FROM node:22 AS builder
+WORKDIR /app
+
+# Install deps (including dev) for TypeScript build
+COPY package*.json ./
+RUN npm ci
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
+# Prune dev dependencies for production
+RUN npm prune --omit=dev
+
+# Step 2: Run (lean, glibc-based image to avoid native module issues)
+FROM node:22-slim
+WORKDIR /app
+
+# Copy only what's needed to run
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/built ./built
+
+EXPOSE 4200
+CMD ["node", "built/server.js"]
