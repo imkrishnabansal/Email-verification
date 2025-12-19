@@ -19,6 +19,7 @@ export const corsConfig = {
   ) => {
     const allowedOrigins = [
       `http://localhost:${process.env.CLIENT_PORT || 5173}`,
+      "https://email-verification-i138.onrender.com",
     ];
 
     if (!origin || allowedOrigins.includes(origin)) {
