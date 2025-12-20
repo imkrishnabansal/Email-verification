@@ -17,15 +17,23 @@ export const corsConfig = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    // Default allowed origins
+    // Default allowed origins (no trailing slash)
     const defaultOrigins = [
       `http://localhost:${process.env.CLIENT_PORT || 5173}`,
-      "https://email-verification-4.onrender.com/",
+      "https://email-verification-i138.onrender.com",
+      "https://email-verification-1-d9o6.onrender.com",
+      "https://email-verification-2.onrender.com",
+      "https://email-verification-4.onrender.com",
     ];
     const extra = (process.env.CLIENT_ORIGINS || "")
       .split(',')
       .map(s => s.trim())
       .filter(Boolean);
+
+    // Allow all Render.com deployed sites as fallback (wildcard for convenience)
+    if (origin && origin.includes('.onrender.com')) {
+      return callback(null, true);
+    }
 
     // If client sets '*' in CLIENT_ORIGINS, allow all origins.
     if (extra.includes('*')) {
