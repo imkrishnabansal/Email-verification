@@ -4,7 +4,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // use TLS
   auth: {
     user: process.env.APP_MAIL,
     pass: process.env.MAIL_PASS,
@@ -78,6 +80,7 @@ export async function sendOtpEmail(toEmail: string, code: string) {
     });
     return { success: true, id: info.messageId };
   } catch (err) {
+    console.error('sendOtpEmail failed:', err);
     throw new Error(`Failed to send OTP email: ${getErrorMessage(err)}`);
   }
 }
@@ -101,8 +104,21 @@ export async function sendAuditEmail(payload: AuditPayload) {
         to: process.env.APP_MAIL as string,
       },
     });
+    console.log('sendAuditEmail sent:', { messageId: info.messageId, envelope: info.envelope });
     return { success: true, id: info.messageId };
   } catch (err) {
+    console.error('sendAuditEmail failed:', err);
     throw new Error(`Failed to send audit email: ${getErrorMessage(err)}`);
+  }
+}
+
+export async function verifyMailer() {
+  try {
+    const ok = await transporter.verify();
+    console.log('Mailer verified:', ok);
+    return true;
+  } catch (err) {
+    console.error('Mailer verification failed:', err);
+    throw err;
   }
 }
