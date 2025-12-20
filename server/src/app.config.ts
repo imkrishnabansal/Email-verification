@@ -22,9 +22,6 @@ export const corsConfig = {
       `http://localhost:${process.env.CLIENT_PORT || 5173}`,
       "https://email-verification-4.onrender.com/",
     ];
-
-    // Allow additional origins via env var CLIENT_ORIGINS (comma-separated).
-    // Example: CLIENT_ORIGINS="https://a.example.com,https://b.example.com"
     const extra = (process.env.CLIENT_ORIGINS || "")
       .split(',')
       .map(s => s.trim())
