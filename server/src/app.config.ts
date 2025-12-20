@@ -17,16 +17,31 @@ export const corsConfig = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    const allowedOrigins = [
+    // Default allowed origins
+    const defaultOrigins = [
       `http://localhost:${process.env.CLIENT_PORT || 5173}`,
       "https://email-verification-i138.onrender.com",
     ];
+
+    // Allow additional origins via env var CLIENT_ORIGINS (comma-separated).
+    // Example: CLIENT_ORIGINS="https://a.example.com,https://b.example.com"
+    const extra = (process.env.CLIENT_ORIGINS || "")
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    // If client sets '*' in CLIENT_ORIGINS, allow all origins.
+    if (extra.includes('*')) {
+      return callback(null, true);
+    }
+
+    const allowedOrigins = Array.from(new Set([...defaultOrigins, ...extra]));
 
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    return callback(new Error("Not allowed by CORS"));
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 };
