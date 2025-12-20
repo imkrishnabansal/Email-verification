@@ -20,7 +20,7 @@ export const corsConfig = {
     // Default allowed origins
     const defaultOrigins = [
       `http://localhost:${process.env.CLIENT_PORT || 5173}`,
-      "https://email-verification-i138.onrender.com",
+      "https://email-verification-3.onrender.com",
     ];
 
     // Allow additional origins via env var CLIENT_ORIGINS (comma-separated).
