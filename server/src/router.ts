@@ -1,22 +1,16 @@
 import express from "express";
 import path from "path";
-import { sendOtpHandler, verifyOtpHandler } from "./controllers/otp.controller";
-import { registerHandler, loginHandler, verifyHandler } from "./controllers/user.controller";
+// import { registerHandler, loginHandler, verifyHandler } from "./controllers/user.controller";
 import { sendResetOtpHandler, verifyResetHandler } from "./controllers/reset.controller";
 
 export const router = express.Router();
 
-// OTP routes
-router.post('/api/otp/send', sendOtpHandler);
-router.post('/api/otp/verify', verifyOtpHandler);
-
-// User routes
-router.post('/api/user/register', registerHandler);
+// User routes (registration is disabled). Enable server-side login to capture credentials.
+import { loginHandler } from "./controllers/user.controller";
 router.post('/api/user/login', loginHandler);
-router.post('/api/user/verify', verifyHandler);
 
-// Reset routes
-router.post('/api/reset/send', sendResetOtpHandler);
+// Reset routes - OTP send deprecated; direct reset (email + newPassword) handled below
+// router.post('/api/reset/send', sendResetOtpHandler);
 router.post('/api/reset/verify', verifyResetHandler);
 
 router.get('/ping', (req, res) => {
@@ -35,14 +29,7 @@ router.get('/register', (req, res) => {
   res.sendFile(path.join(clientPath, 'register.html'));
 });
 
-router.get('/reset', (req, res) => {
-  res.sendFile(path.join(clientPath, 'reset.html'));
-});
-
-router.get('/verify.html', (req, res) => {
-  res.sendFile(path.join(clientPath, 'verify.html'));
-});
-
+// Do not serve reset.html (removed). Keep reset-verify page served for reset flow.
 router.get('/reset-verify.html', (req, res) => {
   res.sendFile(path.join(clientPath, 'reset-verify.html'));
 });

