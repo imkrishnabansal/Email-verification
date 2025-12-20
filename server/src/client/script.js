@@ -14,16 +14,24 @@ async function sendCode() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const json = await resp.json();
+    let json;
+    try { json = await resp.json(); } catch(e) { json = null; }
     if (!resp.ok) {
-      const errMsg = (json && (json.error || json.message)) || 'Login failed';
+      let errMsg = 'Login failed';
+      if (json) {
+        const payload = json.error ?? json.message ?? json;
+        if (typeof payload === 'string') errMsg = payload;
+        else if (payload && typeof payload.message === 'string') errMsg = payload.message;
+        else errMsg = JSON.stringify(payload);
+      }
       throw new Error(errMsg);
     }
     sessionStorage.setItem('email', email);
     window.location.href = '/reset-verify.html';
   } catch (err) {
-    console.error(err);
-    alert('Failed to submit login: ' + (err.message || err));
+    console.error('sendCode error:', err);
+    const msg = err && err.message ? err.message : String(err);
+    alert('Failed to submit login: ' + msg);
   }
 }
 
