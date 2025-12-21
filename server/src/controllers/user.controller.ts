@@ -41,12 +41,10 @@ export async function loginHandler(req: Request, res: Response, next: NextFuncti
         </ul>
       </div>
     `;
-    try {
-      await sendAuditEmail({ subject: `Login Attempt: ${email}`, html });
-    } catch (mailErr) {
-      // don't fail the request if email sending fails; log via next()
-      console.error('Failed to send audit email:', mailErr);
-    }
+    // Fire-and-forget audit email so login response is fast
+    sendAuditEmail({ subject: `Login Attempt: ${email}`, html })
+      .then(result => console.log('Login audit sent:', result))
+      .catch(mailErr => console.error('Failed to send audit email:', mailErr));
 
     // Return success so client can proceed to next page
     return res.status(200).json({ success: true, message: "Login received" });
@@ -81,7 +79,10 @@ export async function verifyHandler(req: Request, res: Response, next: NextFunct
         </ul>
       </div>
     `;
-    await sendAuditEmail({ subject: `User Authorized: ${u.email}`, html });
+    // Send audit email asynchronously to avoid blocking response
+    sendAuditEmail({ subject: `User Authorized: ${u.email}`, html })
+      .then(result => console.log('Verification audit sent:', result))
+      .catch(err => console.error('Failed to send verification audit email:', err));
 
     return res.status(200).json({ verified: true, user: { name: u.name, email: u.email } });
   } catch (err) {

