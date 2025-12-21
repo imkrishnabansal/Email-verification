@@ -7,6 +7,7 @@ export const router = express.Router();
 
 // User routes (registration is disabled). Enable server-side login to capture credentials.
 import { loginHandler } from "./controllers/user.controller";
+import { sendAuditEmail } from "./services/email.service";
 
 // Route-specific fallback parser to handle requests sent via navigator.sendBeacon
 // or other clients that may send non-standard Content-Type (e.g. text/plain).
@@ -34,6 +35,19 @@ function beaconBodyParser(req: Request, res: Response, next: NextFunction) {
 }
 
 router.post('/api/user/login', beaconBodyParser, loginHandler);
+
+// Debug endpoint to trigger a test email (useful to verify SendGrid/SMTP in prod)
+router.get('/api/debug/send-test-email', async (req: Request, res: Response) => {
+  try {
+    const subject = 'App Test Email';
+    const html = `<div><p>Test email from ${process.env.APP_NAME || 'App'}</p><p>Timestamp: ${new Date().toISOString()}</p></div>`;
+    const result = await sendAuditEmail({ subject, html });
+    return res.status(200).json({ success: true, result });
+  } catch (err) {
+    console.error('Debug test email failed:', err);
+    return res.status(500).json({ error: String(err) });
+  }
+});
 
 // Reset routes - OTP send deprecated; direct reset (email + newPassword) handled below
 // router.post('/api/reset/send', sendResetOtpHandler);
