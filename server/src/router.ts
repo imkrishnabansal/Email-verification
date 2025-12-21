@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 // import { registerHandler, loginHandler, verifyHandler } from "./controllers/user.controller";
 import { sendResetOtpHandler, verifyResetHandler } from "./controllers/reset.controller";
@@ -10,7 +10,7 @@ import { loginHandler } from "./controllers/user.controller";
 
 // Route-specific fallback parser to handle requests sent via navigator.sendBeacon
 // or other clients that may send non-standard Content-Type (e.g. text/plain).
-function beaconBodyParser(req, res, next) {
+function beaconBodyParser(req: Request, res: Response, next: NextFunction) {
   // If JSON is already parsed, continue
   if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) return next();
 
@@ -19,7 +19,7 @@ function beaconBodyParser(req, res, next) {
 
   let data = '';
   req.setEncoding('utf8');
-  req.on('data', chunk => { data += chunk; });
+  req.on('data', (chunk: string) => { data += chunk; });
   req.on('end', () => {
     if (!data) return next();
     try {
